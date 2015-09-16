@@ -1,0 +1,107 @@
+---
+title: "Reproducible Research First Assignment"
+author: "Khaled Alzafari"
+date: "September 16, 2015"
+output: word_document
+---
+
+## load the Data:
+```{r}
+echo = TRUE
+mydata= read.csv(file="activity.csv", header=TRUE, sep=",")
+```
+
+
+## Histogram for the total number of steps per day:
+```{r}
+echo = TRUE
+totalSteps <- aggregate(steps ~ date, data = mydata, sum, na.rm = TRUE)
+library(ggplot2)
+ggplot(data=totalSteps, aes(totalSteps$steps)) + geom_histogram( col="black", fill="red", alpha = 0.3, binwidth=1500) + labs(title="Histogram for Total Steps Per Day") + labs(x="Total Steps", y="Count") + geom_density(alpha=0.9)
+
+```
+
+## the mean and median total number of steps taken per day:
+
+```{r}
+echo = TRUE
+Mean_steps = mean(totalSteps$steps,  na.rm = TRUE)
+Median_steps = median(totalSteps$steps,  na.rm = TRUE)
+Mean_steps
+Median_steps
+```
+
+## The average daily activity pattern: 
+
+```{r}
+echo = TRUE
+meanSteps <- aggregate(steps ~ interval, data = mydata, mean, na.rm = TRUE)
+
+dp= ggplot(meanSteps, aes(meanSteps$interval, meanSteps$steps))+ geom_line(col="red", fill="red", alpha = 0.5) 
+dp + labs(title="Time seires for Average number of steps Taken at 5 minute Intervals") + labs(x="T5-min interval", y="average number of steps taken")
+
+```
+
+## Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
+echo = TRUE
+maxinterval = meanSteps[which.max(meanSteps$steps), ]
+maxinterval
+### It is the interval number 835  that has the value of 206.2
+```
+
+##Imputing missing values
+### Number of Missing Value
+
+```{r}
+echo = TRUE
+missing_rows <- sum(!complete.cases(mydata))
+missing_rows
+```
+
+## Devise a strategy for filling in all of the missing values in the dataset the new stratgy depend on replace NA with the mean of the "steps" variable
+```{r}
+echo = TRUE
+newdataset= mydata
+newdataset$steps[which(is.na(newdataset$steps))] = mean(newdataset$steps, na.rm = T)
+```
+
+## histogram for the new Data Set:
+```{r}
+echo = TRUE
+newtotalSteps <- aggregate(steps ~ date, data = newdataset, sum, na.rm = TRUE)
+library(ggplot2)
+ggplot(data=newtotalSteps, aes(newtotalSteps$steps)) + geom_histogram( col="black", fill="blue", alpha = 0.3, binwidth=1500) + labs(title="Histogram for Total Steps Per Day") + labs(x="Total Steps", y="Count") + geom_density(alpha=0.9)
+```
+
+## The mean and median total number of steps taken per day for the new data set:
+```{r}
+echo = TRUE
+newMean_steps = mean(newtotalSteps$steps)
+newMedian_steps = median(newtotalSteps$steps)
+newMean_steps
+newMedian_steps
+
+```
+
+## What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+### The mean for both data (before and after removing missing Data NA) while our strategy was based on replacing NA with the mean of the same variable.whereas, the there is a small difference for the median before removeing NA and after. 
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+echo = TRUE
+newdataset$days= weekdays(as.Date(newdataset$date))
+library(plyr)
+newdataset$weeks <- revalue(newdataset$days, c("Saturday"="weekend", "Sunday"="weekend", "Monday"="weekday", "Tuesday"="weekday", "Wednesday"="weekday","Thursday"="weekday", "Friday"="weekday" ))
+newmeanSteps <- aggregate(steps ~ interval + weeks, data = newdataset, mean, na.rm = TRUE)
+
+library(ggplot2)
+X1 = ggplot (newmeanSteps, aes(newmeanSteps$interval, newmeanSteps$steps, colour = newmeanSteps$weeks) ) + geom_line() 
+X1 + labs(title="Average number of steps Taken at 5 minute Intervals") + labs(x="T5-min interval", y="average number of steps taken") + labs(colour="Type of week Day")
+```
+
+### The difference is clear between the normal working days and weekend days...
